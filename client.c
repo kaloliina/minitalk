@@ -6,7 +6,7 @@
 /*   By: khiidenh <khiidenh@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/21 15:10:09 by khiidenh          #+#    #+#             */
-/*   Updated: 2025/02/26 13:58:18 by khiidenh         ###   ########.fr       */
+/*   Updated: 2025/02/26 14:55:26 by khiidenh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,20 +20,6 @@ static void	return_handler(int sig, siginfo_t *info, void *ucontext)
 	(void)*info;
 	if (sig == SIGUSR1)
 		g_received = 1;
-}
-
-static void	response_check(void)
-{
-	int	remaining_usec;
-
-	remaining_usec = 20000;
-	while (g_received == 0 && remaining_usec > 0)
-	{
-		usleep(1000);
-		remaining_usec = remaining_usec - 1000;
-	}
-	if (g_received == 0)
-		ft_error("Timeout: Server failed to send signal back!");
 }
 
 static void	send_binary(unsigned char bit, pid_t pid)
@@ -54,7 +40,11 @@ static void	send_binary(unsigned char bit, pid_t pid)
 			if (kill(pid, SIGUSR1) == -1)
 				ft_error("Signal was not delivered!");
 		}
-		response_check();
+		while (g_received == 0)
+		{
+			if (usleep(100000) == 0 && g_received == 0)
+				ft_error("Timeout: Server failed to send signal back!");
+		}
 		i--;
 	}
 }
